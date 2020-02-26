@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"sync/atomic"
 	"time"
+
+	tm "github.com/buger/goterm"
 )
 
 type logger struct {
@@ -20,20 +21,32 @@ func (l *logger) RoundTrip(r *http.Request) (*http.Response, error) {
 	return l.rt.RoundTrip(r)
 }
 
-func LogRPS(ctx context.Context, t *time.Ticker, rt http.RoundTripper) http.RoundTripper {
+func Logger(ctx context.Context, t *time.Ticker, rt http.RoundTripper) http.RoundTripper {
+	if !*verboseFlag {
+		return rt
+	}
 	l := &logger{
 		rt:      rt,
 		counter: new(int64),
 	}
 	go func() {
+		start := time.Now()
+		last := int64(0)
+		tm.Clear()
 		for {
-			start := time.Now()
 			for {
 				select {
 				case <-ctx.Done():
 					return
 				case <-t.C:
-					log.Printf("Current RPS: %f", float64(*l.counter)/time.Since(start).Seconds())
+					new := atomic.SwapInt64(l.counter, *l.counter)
+					since := new - last
+					last = new
+					if since != 0 {
+						tm.MoveCursor(1, 1)
+						tm.Printf("Current RPS: %f  Total requests: %d", float64(since)/time.Since(start).Seconds(), new)
+						tm.Flush()
+					}
 					start = time.Now()
 				}
 			}

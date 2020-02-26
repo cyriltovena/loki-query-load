@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	urlFlag = flag.String("url", "http://localhost:3100", "the url of the Loki server to target.")
-	client  = &http.Client{
+	urlFlag     = flag.String("url", "http://localhost:3100", "the url of the Loki server to target.")
+	verboseFlag = flag.Bool("verbose", false, "print stats")
+	client      = &http.Client{
 		Timeout: 5 * time.Minute,
 	}
 )
@@ -33,9 +34,9 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	client.Transport = LogRPS(ctx, time.NewTicker(200*time.Millisecond), client.Transport)
+	client.Transport = Logger(ctx, time.NewTicker(time.Second), http.DefaultTransport)
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 12; i++ {
 		go worker(ctx, *u)
 	}
 	<-ctx.Done()
@@ -43,7 +44,6 @@ func main() {
 
 func worker(ctx context.Context, u url.URL) {
 	for {
-		time.Sleep(time.Second)
 		if ctx.Err() != nil {
 			return
 		}
@@ -75,12 +75,11 @@ func query(ctx context.Context, u url.URL) error {
 	}
 
 	_, err = doQueryRange(ctx, queryrange{
-		start:     time.Now().Add(-1 * time.Hour),
+		start:     time.Now().Add(-24 * time.Hour),
 		end:       time.Now(),
 		direction: BACKWARD,
 		limit:     10000,
 		query:     `{namespace="default"} |= "foo" != "foo"`,
-		step:      5 * time.Second,
 		url:       u,
 	}, client)
 
@@ -156,7 +155,7 @@ func queryLabels(ctx context.Context, u url.URL) error {
 	}
 
 	_, err = doLabels(ctx, labels{
-		start: time.Now().Add(-1 * time.Hour),
+		start: time.Now().Add(-3 * time.Hour),
 		end:   time.Now(),
 		name:  "container_name",
 		url:   u,
@@ -167,7 +166,7 @@ func queryLabels(ctx context.Context, u url.URL) error {
 	}
 
 	_, err = doLabels(ctx, labels{
-		start: time.Now().Add(-1 * time.Hour),
+		start: time.Now().Add(-6 * time.Hour),
 		end:   time.Now(),
 		name:  "job",
 		url:   u,
