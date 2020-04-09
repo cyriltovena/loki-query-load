@@ -36,7 +36,7 @@ func (x Direction) String() string {
 	return strconv.Itoa(int(x))
 }
 
-type queryrange struct {
+type query struct {
 	query      string
 	start, end time.Time
 	direction  Direction
@@ -46,7 +46,7 @@ type queryrange struct {
 	url  url.URL
 }
 
-func doQueryRange(ctx context.Context, r queryrange, c *http.Client) (string, error) {
+func doQueryRange(ctx context.Context, r query, c *http.Client) (string, error) {
 
 	req, err := http.NewRequestWithContext(ctx, "GET", r.url.String(), http.NoBody)
 	if err != nil {
@@ -63,6 +63,38 @@ func doQueryRange(ctx context.Context, r queryrange, c *http.Client) (string, er
 		params.Add("step", fmt.Sprintf("%f", r.step.Seconds()))
 	}
 	req.URL.Path = "/loki/api/v1/query_range"
+	req.URL.RawQuery = params.Encode()
+	resp, err := c.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode/2 != 100 {
+		return string(bodyBytes), fmt.Errorf("status code fail: %d", resp.StatusCode)
+	}
+
+	return string(bodyBytes), nil
+}
+
+func doQueryInstant(ctx context.Context, r query, c *http.Client) (string, error) {
+
+	req, err := http.NewRequestWithContext(ctx, "GET", r.url.String(), http.NoBody)
+	if err != nil {
+		return "", nil
+	}
+	params := req.URL.Query()
+	params.Add("time", fmt.Sprintf("%d", r.start.UnixNano()))
+	params.Add("query", r.query)
+	params.Add("direction", r.direction.String())
+	params.Add("limit", fmt.Sprintf("%d", r.limit))
+
+	req.URL.Path = "/loki/api/v1/query"
 	req.URL.RawQuery = params.Encode()
 	resp, err := c.Do(req)
 	if err != nil {
