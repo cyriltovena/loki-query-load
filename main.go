@@ -36,7 +36,7 @@ func main() {
 
 	client.Transport = Logger(ctx, time.NewTicker(time.Second), http.DefaultTransport)
 
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 40; i++ {
 		go worker(ctx, *u)
 	}
 	<-ctx.Done()
@@ -65,7 +65,7 @@ func doQueries(ctx context.Context, u url.URL) error {
 		start:     time.Now().Add(-6 * time.Hour),
 		end:       time.Now(),
 		direction: BACKWARD,
-		limit:     10000,
+		limit:     5000,
 		query:     `{namespace="cortex-ops"} |= "foo" != "foo"`,
 		step:      1 * time.Minute,
 		url:       u,
@@ -78,7 +78,7 @@ func doQueries(ctx context.Context, u url.URL) error {
 	_, err = doQueryInstant(ctx, query{
 		start:     time.Now().Add(-6 * time.Hour),
 		direction: BACKWARD,
-		limit:     10000,
+		limit:     5000,
 		query:     `{namespace="cortex-ops"} |= "foo" != "foo"`,
 		url:       u,
 	}, client)
@@ -91,7 +91,7 @@ func doQueries(ctx context.Context, u url.URL) error {
 		start:     time.Now().Add(-24 * time.Hour),
 		end:       time.Now(),
 		direction: BACKWARD,
-		limit:     10000,
+		limit:     5000,
 		query:     `{namespace="default", job="default/prometheus"} |= "foo" != "foo"`,
 		url:       u,
 	}, client)
@@ -103,7 +103,7 @@ func doQueries(ctx context.Context, u url.URL) error {
 	_, err = doQueryInstant(ctx, query{
 		start:     time.Now().Add(-6 * time.Hour),
 		direction: BACKWARD,
-		limit:     10000,
+		limit:     5000,
 		query:     `{namespace="default", job="default/prometheus"} |= "foo" != "foo"`,
 		url:       u,
 	}, client)
@@ -116,7 +116,7 @@ func doQueries(ctx context.Context, u url.URL) error {
 		start:     time.Now().Add(-3 * time.Hour),
 		end:       time.Now(),
 		direction: BACKWARD,
-		limit:     10000,
+		limit:     5000,
 		query:     `{namespace="default"} |= "foo" != "foo"`,
 		url:       u,
 	}, client)
@@ -128,7 +128,7 @@ func doQueries(ctx context.Context, u url.URL) error {
 	_, err = doQueryInstant(ctx, query{
 		start:     time.Now().Add(-3 * time.Hour),
 		direction: BACKWARD,
-		limit:     10000,
+		limit:     5000,
 		query:     `{namespace="default"} |= "foo" != "foo"`,
 		url:       u,
 	}, client)
@@ -141,7 +141,7 @@ func doQueries(ctx context.Context, u url.URL) error {
 		start:     time.Now().Add(-2 * time.Hour),
 		end:       time.Now(),
 		direction: BACKWARD,
-		limit:     10000,
+		limit:     5000,
 		query:     `{cluster="dev-us-central1", job=~".*/query-frontend"}`,
 		url:       u,
 	}, client)
@@ -153,7 +153,7 @@ func doQueries(ctx context.Context, u url.URL) error {
 	_, err = doQueryInstant(ctx, query{
 		start:     time.Now().Add(-2 * time.Hour),
 		direction: BACKWARD,
-		limit:     10000,
+		limit:     5000,
 		query:     `{cluster="dev-us-central1", job=~".*/query-frontend"}`,
 		url:       u,
 	}, client)
@@ -166,7 +166,7 @@ func doQueries(ctx context.Context, u url.URL) error {
 		start:     time.Now().Add(-1 * time.Hour),
 		end:       time.Now(),
 		direction: BACKWARD,
-		limit:     10000,
+		limit:     5000,
 		query:     `sum(rate({namespace="default"}[5m])) by (job)`,
 		url:       u,
 	}, client)
@@ -178,7 +178,7 @@ func doQueries(ctx context.Context, u url.URL) error {
 	_, err = doQueryInstant(ctx, query{
 		start:     time.Now().Add(-1 * time.Hour),
 		direction: BACKWARD,
-		limit:     10000,
+		limit:     5000,
 		query:     `sum(rate({namespace="default"}[5m])) by (job)`,
 		url:       u,
 	}, client)

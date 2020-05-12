@@ -74,8 +74,9 @@ func doQueryRange(ctx context.Context, r query, c *http.Client) (string, error) 
 	if err != nil {
 		return "", err
 	}
-
+	b := string(bodyBytes)
 	if resp.StatusCode/2 != 100 {
+		fmt.Println(b)
 		return string(bodyBytes), fmt.Errorf("status code fail: %d", resp.StatusCode)
 	}
 
